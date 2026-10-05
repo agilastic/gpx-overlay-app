@@ -140,39 +140,8 @@ class App(ttk.Frame):
         self._build_file_row(left, "Action-cam video (optional)", self.video_path, self._pick_video, row=1)
         self._build_file_row(left, "Output file", self.out_path, self._pick_output, row=2, save=True)
 
-        theme_row = ttk.Frame(left)
-        theme_row.grid(row=3, column=0, columnspan=3, sticky="we", pady=(12, 0))
-        ttk.Label(theme_row, text="Theme").pack(side="left")
-        theme_menu = ttk.Combobox(theme_row, textvariable=self.theme_name, values=list(THEMES.keys()),
-                                   state="readonly", width=20)
-        theme_menu.pack(side="left", padx=8)
-        theme_menu.bind("<<ComboboxSelected>>", lambda e: self._schedule_preview())
-
-        all_chk = ttk.Checkbutton(theme_row, text="Enable All Overlays", variable=self.enable_all,
-                                   command=self._on_enable_all)
-        all_chk.pack(side="left", padx=(24, 0))
-
-        output_row = ttk.Frame(left)
-        output_row.grid(row=4, column=0, columnspan=3, sticky="we", pady=(8, 0))
-        ttk.Label(output_row, text="Resolution").pack(side="left")
-        res_menu = ttk.Combobox(output_row, textvariable=self.resolution_name, values=list(RESOLUTIONS.keys()),
-                                 state="readonly", width=16)
-        res_menu.pack(side="left", padx=8)
-        res_menu.bind("<<ComboboxSelected>>", lambda e: self._schedule_preview())
-
-        ttk.Label(output_row, text="Aspect").pack(side="left", padx=(12, 0))
-        aspect_menu = ttk.Combobox(output_row, textvariable=self.aspect_name, values=list(ASPECT_RATIOS.keys()),
-                                    state="readonly", width=16)
-        aspect_menu.pack(side="left", padx=8)
-        aspect_menu.bind("<<ComboboxSelected>>", lambda e: self._schedule_preview())
-
-        ttk.Label(output_row, text="FPS").pack(side="left", padx=(12, 0))
-        fps_menu = ttk.Combobox(output_row, textvariable=self.fps_value, values=FPS_OPTIONS,
-                                 state="readonly", width=10)
-        fps_menu.pack(side="left", padx=8, fill=None, expand=False)
-
         widgets_frame = ttk.Frame(left)
-        widgets_frame.grid(row=5, column=0, columnspan=3, pady=(16, 8), sticky="we")
+        widgets_frame.grid(row=3, column=0, columnspan=3, pady=(16, 8), sticky="we")
         self.controls = {}
         for i, (key, label, default_pos) in enumerate(WIDGET_DEFS):
             ctrl = WidgetControl(widgets_frame, key, label, default_pos, self._schedule_preview)
@@ -181,29 +150,11 @@ class App(ttk.Frame):
             self.controls[key] = ctrl
 
         slider_row = ttk.Frame(left)
-        slider_row.grid(row=6, column=0, columnspan=3, sticky="we", pady=(4, 0))
+        slider_row.grid(row=4, column=0, columnspan=3, sticky="we", pady=(4, 0))
         ttk.Label(slider_row, text="Preview time").pack(side="left")
         self.time_slider = ttk.Scale(slider_row, from_=0, to=100, variable=self.preview_time,
                                       orient="horizontal", command=lambda v: self._schedule_preview())
         self.time_slider.pack(side="left", fill="x", expand=True, padx=8)
-
-        self.progress = ttk.Progressbar(left, mode="determinate", maximum=100)
-        self.progress.grid(row=7, column=0, columnspan=3, sticky="we", pady=(12, 4))
-
-        self.status_label = ttk.Label(left, text="Ready")
-        self.status_label.grid(row=8, column=0, columnspan=3, sticky="w")
-
-        render_row = ttk.Frame(left)
-        render_row.grid(row=9, column=0, columnspan=3, pady=(12, 0), sticky="we")
-        render_row.columnconfigure(0, weight=1)
-
-        self.render_btn = ttk.Button(render_row, text="Render Overlay", command=self._on_render)
-        self.render_btn.grid(row=0, column=0, sticky="we")
-
-        self.cancel_btn = ttk.Button(render_row, text="Cancel", command=self._on_cancel, state="disabled")
-        self.cancel_btn.grid(row=0, column=1, padx=(8, 0))
-
-        self._cancel_event = None
 
         left.columnconfigure(1, weight=1)
 
@@ -214,6 +165,57 @@ class App(ttk.Frame):
         self._checker_bg = self._make_checker(PREVIEW_W, PREVIEW_H)
         self._draw_preview_image(self._checker_bg)
 
+        settings = ttk.Frame(right, padding=(0, 16, 0, 0))
+        settings.pack(fill="x")
+        settings.columnconfigure(1, weight=1)
+
+        def _setting_row(row, label_text):
+            ttk.Label(settings, text=label_text).grid(row=row, column=0, sticky="w", pady=4)
+
+        _setting_row(0, "Theme")
+        theme_menu = ttk.Combobox(settings, textvariable=self.theme_name, values=list(THEMES.keys()),
+                                   state="readonly", width=20)
+        theme_menu.grid(row=0, column=1, sticky="w", padx=8)
+        theme_menu.bind("<<ComboboxSelected>>", lambda e: self._schedule_preview())
+
+        _setting_row(1, "Resolution")
+        res_menu = ttk.Combobox(settings, textvariable=self.resolution_name, values=list(RESOLUTIONS.keys()),
+                                 state="readonly", width=20)
+        res_menu.grid(row=1, column=1, sticky="w", padx=8)
+        res_menu.bind("<<ComboboxSelected>>", lambda e: self._schedule_preview())
+
+        _setting_row(2, "Aspect")
+        aspect_menu = ttk.Combobox(settings, textvariable=self.aspect_name, values=list(ASPECT_RATIOS.keys()),
+                                    state="readonly", width=20)
+        aspect_menu.grid(row=2, column=1, sticky="w", padx=8)
+        aspect_menu.bind("<<ComboboxSelected>>", lambda e: self._schedule_preview())
+
+        _setting_row(3, "FPS")
+        fps_menu = ttk.Combobox(settings, textvariable=self.fps_value, values=FPS_OPTIONS,
+                                 state="readonly", width=20)
+        fps_menu.grid(row=3, column=1, sticky="w", padx=8)
+
+        all_chk = ttk.Checkbutton(settings, text="Enable All Overlays", variable=self.enable_all,
+                                   command=self._on_enable_all)
+        all_chk.grid(row=4, column=0, columnspan=2, sticky="w", pady=(8, 0))
+
+        self.progress = ttk.Progressbar(right, mode="determinate", maximum=100)
+        self.progress.pack(fill="x", pady=(20, 4))
+
+        self.status_label = ttk.Label(right, text="Ready")
+        self.status_label.pack(anchor="w")
+
+        render_row = ttk.Frame(right)
+        render_row.pack(fill="x", pady=(12, 0))
+        render_row.columnconfigure(0, weight=1)
+
+        self.render_btn = ttk.Button(render_row, text="Render Overlay", command=self._on_render)
+        self.render_btn.grid(row=0, column=0, sticky="we")
+
+        self.cancel_btn = ttk.Button(render_row, text="Cancel", command=self._on_cancel, state="disabled")
+        self.cancel_btn.grid(row=0, column=1, padx=(8, 0))
+
+        self._cancel_event = None
         self._preview_job = None
 
     def _make_checker(self, w, h, cell=12):
@@ -448,7 +450,7 @@ class App(ttk.Frame):
 
 def main():
     root = tk.Tk()
-    root.geometry("1120x800")
+    root.geometry("1260x620")
     App(root)
     root.mainloop()
 
